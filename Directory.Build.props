@@ -12,7 +12,9 @@
         <EmbedUntrackedSources>true</EmbedUntrackedSources>
         <IncludeSymbols>true</IncludeSymbols>
         <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-        <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+        
+        <!-- GitHub Actions sets CI env var to true -->
+        <ContinuousIntegrationBuild Condition=" '$(CI)' == 'true' ">true</ContinuousIntegrationBuild>
     </PropertyGroup>
 
     <ItemGroup>
