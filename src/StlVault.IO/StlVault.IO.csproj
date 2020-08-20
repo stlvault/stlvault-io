@@ -4,6 +4,9 @@
 		<TargetFramework>netstandard2.1</TargetFramework>
 		<Nullable>enable</Nullable>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+
+		<Description>3d model file parsing components extracted from STLVault</Description>
+		<PackageTags>stl;stlvault;3D;obj;object;model;parser;import;reader</PackageTags>
 	</PropertyGroup>
 
 	<ItemGroup>
