@@ -8,6 +8,7 @@
 		<Optimize>true</Optimize>
 		<Configuration>Release</Configuration>
 		<OutputType>Exe</OutputType>
+		<IsPackable>False</IsPackable>
 	</PropertyGroup>
 
 	<ItemGroup>

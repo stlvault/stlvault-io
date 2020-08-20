@@ -22,8 +22,8 @@ class Build : NukeBuild
 {
     public static int Main() => Execute<Build>(x => IsLocalBuild ? x.Pack : x.Publish);
 
-    [Parameter("Configuration to build - Default is 'Debug' (local) or 'Release' (server)")]
-    readonly Configuration Configuration = IsLocalBuild ? Configuration.Debug : Configuration.Release;
+    [Parameter("Configuration to build - Default is 'Release'")]
+    readonly Configuration Configuration = Configuration.Release;
 
     [Parameter] string NuGetApiKey;
     [Solution] readonly Solution Solution;
@@ -65,12 +65,15 @@ class Build : NukeBuild
 
     Target Pack => _ => _
         .Produces(OutputDirectory / "*.nupkg")
-        .DependsOn(Compile)
+        .Requires(() => Configuration == Configuration.Release)
+        .DependsOn(Clean, Compile)
         .Executes(() =>
         {
             DotNetPack(s => s
                 .SetProject(Solution)
+                .SetConfiguration(Configuration)
                 .EnableNoBuild()
+                .SetVersion(GitVersion.FullSemVer)
                 .SetOutputDirectory(OutputDirectory));
         });
 
