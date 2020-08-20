@@ -77,9 +77,13 @@ class Build : NukeBuild
         .Requires(() => NuGetApiKey)
         .Executes(() =>
         {
-            DotNetNuGetPush(s => s
+            foreach (var package in OutputDirectory.GlobFiles("*.nupkg"))
+            {
+                DotNetNuGetPush(s => s
                 .SetSource("https://api.nuget.org/v3/index.json")
-                .SetApiKey(NuGetApiKey));
+                .SetApiKey(NuGetApiKey)
+                .SetTargetPath(package));
+            }
         });
 
 }
