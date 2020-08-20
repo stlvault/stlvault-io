@@ -10,6 +10,9 @@ jobs:
     name: ubuntu-latest
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v1
       - name: Run './build.cmd'
-        run: ./build.cmd
+        run: |
+          git fetch --tags
+          git branch --create-reflog master origin/master
+          ./build.cmd
