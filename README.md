@@ -8,7 +8,10 @@ Both, binary and ASCII STL files are supported.
 Future versions will support a wider range of 3d model files (`.obj`, etc.) as well as writing of some formats.
 
 ## NuGet Packages
-NuGet Packages are available on [NuGet.org](https://www.nuget.org/packages/StlVault.IO/).
+NuGet Packages are available on [NuGet.org](https://www.nuget.org/packages/StlVault.IO/). Current version is still a preview release and might get breaking API changes.
+
+## Examples / Usage
+TBD - look at `src/Benchmarks` for now.
 
 ## Performance
 The parsers in this package are designed to operate with good throughput and low memory usage:
