@@ -1,14 +1,14 @@
 name: Publish
 
-on:
-  push:
-    branches:
-      - master
+on: [push, pull_request]
+
+env:
+  NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
 
 jobs:
-  ubuntu-latest:
-    name: ubuntu-latest
-    runs-on: ubuntu-latest
+  build-library:
+    name: Build Library
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v1
       - name: Run './build.cmd'

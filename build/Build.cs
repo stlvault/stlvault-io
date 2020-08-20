@@ -1,6 +1,4 @@
 using Nuke.Common;
-using Nuke.Common.CI;
-using Nuke.Common.CI.GitHubActions;
 using Nuke.Common.Execution;
 using Nuke.Common.Git;
 using Nuke.Common.IO;
@@ -21,7 +19,9 @@ class Build : NukeBuild
     [Parameter("Configuration to build - Default is 'Release'")]
     readonly Configuration Configuration = Configuration.Release;
 
-    [Parameter] string NuGetApiKey;
+    [Parameter(Name = "NUGET_API_KEY")] 
+    string NuGetApiKey;
+    
     [Solution] readonly Solution Solution;
     [GitRepository] readonly GitRepository GitRepository;
     [GitVersion] readonly GitVersion GitVersion;
@@ -60,7 +60,6 @@ class Build : NukeBuild
         });
 
     Target Pack => _ => _
-        .Produces(OutputDirectory / "*.nupkg")
         .Requires(() => Configuration == Configuration.Release)
         .DependsOn(Clean, Compile)
         .Executes(() =>
@@ -76,8 +75,6 @@ class Build : NukeBuild
     Target Publish => _ => _
         .DependsOn(Pack)
         .Requires(() => NuGetApiKey)
-        .Requires(() => Configuration == Configuration.Release)
-        .Requires(() => GitVersion.BranchName == "master")
         .Executes(() =>
         {
             DotNetNuGetPush(s => s
