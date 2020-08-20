@@ -19,7 +19,7 @@ namespace Benchmarks
         public string File { get; set; }
         
         [Benchmark]
-        public IMeshBuffer ArrayBuffer()
+        public IMeshBuffer ParseSTL()
         {
             var file = GetFileName();
             var buffer = StlImporter.ImportMesh(file, BufferFactory);
