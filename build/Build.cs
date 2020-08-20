@@ -14,13 +14,13 @@ using static Nuke.Common.Tools.DotNet.DotNetTasks;
 [UnsetVisualStudioEnvironmentVariables]
 class Build : NukeBuild
 {
-    public static int Main() => Execute<Build>(x => IsLocalBuild ? x.Pack : x.Publish);
+    public static int Main() => Execute<Build>(x => x.Pack);
 
     [Parameter("Configuration to build - Default is 'Release'")]
     readonly Configuration Configuration = Configuration.Release;
 
-    [Parameter(Name = "NUGET_API_KEY")] 
-    string NuGetApiKey;
+    [Parameter("API Key for NuGet.org", Name = "NUGET_API_KEY")] 
+    readonly string NuGetApiKey;
     
     [Solution] readonly Solution Solution;
     [GitRepository] readonly GitRepository GitRepository;
