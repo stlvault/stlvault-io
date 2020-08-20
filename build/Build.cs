@@ -14,10 +14,6 @@ using static Nuke.Common.Tools.DotNet.DotNetTasks;
 
 [CheckBuildProjectConfigurations]
 [UnsetVisualStudioEnvironmentVariables]
-[GitHubActions(
-    "Publish",
-    GitHubActionsImage.UbuntuLatest,
-    OnPushBranches = new[] { "master" })]
 class Build : NukeBuild
 {
     public static int Main() => Execute<Build>(x => IsLocalBuild ? x.Pack : x.Publish);
