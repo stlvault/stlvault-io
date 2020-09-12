@@ -7,12 +7,14 @@ namespace StlVault.IO
     {
         public Span<Vector3> VertexData { get; }
         public Span<Vector3> NormalData { get; }
-        
+
         /// <summary>
-        /// Allows to release parts of the reserved buffer for reuse.
-        /// This can be used if the buffer was over-provisioned.
+        /// Sets the size of the actual contents of the buffer.
+        /// Must be smaller than the maximum buffer size.
+        /// Implementations may return the unused space.
+        /// May not be used to grow a buffer.
         /// </summary>
-        /// <param name="targetVertexCount">The target size the buffer should be shrunk to.</param>
-        public void Shrink(int targetVertexCount);
+        /// <param name="usedVertexCount">Size the buffer should be shrunk to.</param>
+        void Shrink(int usedVertexCount);
     }
 }

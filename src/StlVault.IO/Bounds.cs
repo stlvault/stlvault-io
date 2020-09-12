@@ -2,10 +2,10 @@
 
 namespace StlVault.IO
 {
-    internal struct Bounds
+    public readonly struct Bounds
     {
-        public Vector3 Center;
-        public Vector3 Extends;
+        public readonly Vector3 Center;
+        public readonly Vector3 Extends;
 
         public Bounds(Vector3 center, Vector3 extends)
         {

@@ -1,10 +1,8 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Runtime.CompilerServices;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Engines;
 using StlVault.IO;
-using StlVault.IO.Stl;
 
 namespace Benchmarks
 {
@@ -18,14 +16,31 @@ namespace Benchmarks
         [Params("bin-030mb", "bin-350mb", "txt-020mb", "txt-220mb")]
         public string File { get; set; }
         
+        // [Benchmark]
+        // public IMeshBuffer ParseSTL()
+        // {
+        //     var file = GetFileName();
+        //     var buffer = StlImporter.ImportMesh(file, BufferFactory);
+        //     buffer.Dispose();
+             
+        //     return buffer;
+        // }
+
         [Benchmark]
         public IMeshBuffer ParseSTL()
         {
+            var importer = new MeshImporter(BufferFactory);
             var file = GetFileName();
-            var buffer = StlImporter.ImportMesh(file, BufferFactory);
-            buffer.Dispose();
-            
-            return buffer;
+            var meshDescriptor = importer.ImportFromFile(file, new MeshImportSettings
+            {
+                ComputeStats = true,
+                CenterVertices = false,
+                StoreNormals = false
+            });
+
+            meshDescriptor.Dispose();
+
+            return meshDescriptor.Data;
         }
 
         private string GetFileName([CallerFilePath] string filePath = null)

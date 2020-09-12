@@ -19,46 +19,47 @@ namespace StlVault.IO
 
         private struct Buffer : IMeshBuffer
         {
-            private readonly bool _hasNormalBuffer;
             private readonly ArrayPool<byte> _pool;
             private readonly byte[] _store;
-            private readonly int _initialSize;
-            private int _shrunkSize;
+            private readonly bool _hasNormalBuffer;
+            private readonly int _bufferSize;
+            private int _usedSize;
 
             public Buffer(ArrayPool<byte> pool, int maxLength, bool createNormalBuffer)
             {
+                _bufferSize = maxLength * Marshal.SizeOf(Vector3.Zero);
                 _hasNormalBuffer = createNormalBuffer;
+                _usedSize = _bufferSize;
                 _pool = pool;
 
-                _shrunkSize = _initialSize = GetByteSize(maxLength, _hasNormalBuffer);
-                _store = _pool.Rent(_initialSize);
-            }
-            private static int GetByteSize(int length, bool hasNormalBuffer)
-            {
-                var arrayCount = hasNormalBuffer ? 2 : 1;
-                return length * Marshal.SizeOf(Vector3.Zero) * arrayCount;
-            }
-
-            private int DataLength => _shrunkSize / 2;
-            private int NormalOffset => _hasNormalBuffer
-                ? _shrunkSize / 2
-                : throw new InvalidOperationException("The buffer was not configured to store normals.");
-
-            public Span<Vector3> VertexData => MemoryMarshal.Cast<byte, Vector3>(_store.AsSpan(0, DataLength));
-            public Span<Vector3> NormalData => MemoryMarshal.Cast<byte, Vector3>(_store.AsSpan(NormalOffset, DataLength));
-
-            public void Shrink(int targetVertexCount)
-            {
-                var targetSize = GetByteSize(targetVertexCount, _hasNormalBuffer);
-                if (targetSize > _shrunkSize)
+                lock (_pool)
                 {
-                    throw new InvalidOperationException("Can't use shrink to grow buffer!");
+                    var arrayCount = createNormalBuffer ? 2 : 1;
+                    _store = _pool.Rent(_bufferSize * arrayCount);
                 }
-
-                _shrunkSize = targetSize;
             }
             
-            public void Dispose() => _pool.Return(_store);
+            public Span<Vector3> VertexData => MemoryMarshal.Cast<byte, Vector3>(_store.AsSpan(0, _usedSize));
+            public Span<Vector3> NormalData => MemoryMarshal.Cast<byte, Vector3>(_hasNormalBuffer ? _store.AsSpan(_bufferSize, _usedSize) : Span<byte>.Empty);
+
+            public void Shrink(int usedVertexCount)
+            {
+                var usedSize = usedVertexCount * Marshal.SizeOf(Vector3.Zero);
+                if (usedSize > _usedSize)
+                {
+                    throw new InvalidOperationException("Buffer may not be grown using Shrink!");
+                }
+
+                _usedSize = usedSize;
+            }
+
+            public void Dispose()
+            {
+                lock (_pool)
+                {
+                    _pool.Return(_store);
+                }
+            }
         }
     }
 }
