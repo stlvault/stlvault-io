@@ -8,12 +8,14 @@ using static System.Runtime.CompilerServices.MethodImplOptions;
 
 namespace StlVault.IO.Stl
 {
+    // This class contains Public API
+    // ReSharper disable MemberCanBePrivate.Global
     public static class StlImporter
     {
         private const int MinimumAsciiFacetChars = 80;
 
         /// <summary>
-        /// Tries to determine which kind of STL we are dealing with.
+        /// Will try to determine which kind of STL we are dealing with.
         /// STL files exist in two flavors:
         ///   - Textual STLs using ASCII Encoding
         ///   - Binary STLs with an 80 byte header, 4 byte facet count, n*50 byte facets
@@ -54,28 +56,50 @@ namespace StlVault.IO.Stl
             }
         }
 
-        public static IMeshBuffer ImportMesh(string path, IMeshBufferFactory factory)
+        /// <summary>
+        /// Import from an STL file at the given location.
+        /// </summary>
+        /// <param name="path">Relative or absolute path to STL file.</param>
+        /// <param name="factory">The factory that produces the buffers used to store the imported data.</param>
+        /// <param name="storeNormals">Decides if normals should be calculated and stored in output.</param>
+        /// <returns>Buffer containing the imported mesh</returns>
+        public static IMeshBuffer ImportMesh(string path, IMeshBufferFactory factory, bool storeNormals = true)
         {
             var fileName = Path.GetFileName(path);
 
             using var stream = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read);
             if (stream.Length < 112) throw new InvalidDataException($"File `{fileName}` is too small to be any kind of valid STL.");
 
+            var buffer = ImportMesh(stream, factory, storeNormals);
+
+            return buffer;
+        }
+
+        /// <summary>
+        /// Import from an STL file a given stream.
+        /// </summary>
+        /// <param name="stream">Readable file stream of STL file.</param>
+        /// <param name="factory">The factory that produces the buffers used to store the imported data.</param> 
+        /// <param name="storeNormals">Decides if normals should be calculated and stored in output.</param>
+        /// <returns>Buffer containing the imported mesh</returns>
+        public static IMeshBuffer ImportMesh(FileStream stream, IMeshBufferFactory factory, bool storeNormals = true)
+        {
             IMeshBuffer? buffer = null;
             try
             {
                 if (IsBinary(stream))
                 {
                     var reader = new BinaryStlReader(stream);
-                    buffer = factory.RequestBuffer(reader.FacetCount * 3, createNormalBuffer: true);
-                    WriteMeshData(reader, buffer);
+                    buffer = factory.RequestBuffer(reader.FacetCount * 3, storeNormals);
+                    WriteMeshData(reader, buffer, storeNormals);
                 }
                 else
                 {
                     var facets = new TextualStlReader(stream);
-                    buffer = factory.RequestBuffer((int) (stream.Length / MinimumAsciiFacetChars), createNormalBuffer: true);
-                    var actualSize = WriteMeshData(facets, buffer);
+                    buffer = factory.RequestBuffer((int) (stream.Length / MinimumAsciiFacetChars), storeNormals);
+                    var actualSize = WriteMeshData(facets, buffer, storeNormals);
                     buffer.Shrink(actualSize);
+
                 }
             }
             catch
@@ -86,34 +110,33 @@ namespace StlVault.IO.Stl
 
             return buffer;
         }
-
-
-        private static void WriteMeshData(BinaryStlReader input, IMeshBuffer output)
+        
+        private static void WriteMeshData(BinaryStlReader input, IMeshBuffer output, bool storeNormals)
         {
             var vertexData = output.VertexData;
-            var normalData = output.NormalData;
+            var normalData = storeNormals ? output.NormalData : Span<Vector3>.Empty;
 
-            var i = 0;
+            var offset = 0;
             foreach (ref readonly var facet in input)
             {
-                WriteFacet(vertexData, normalData, in facet, i);
-                i += 3;
+                WriteFacet(vertexData, normalData, in facet, offset);
+                offset += 3;
             }
         }
 
-        private static int WriteMeshData(TextualStlReader input, IMeshBuffer output)
+        private static int WriteMeshData(TextualStlReader input, IMeshBuffer output, bool storeNormals)
         {
             var vertexData = output.VertexData;
-            var normalData = output.NormalData;
+            var normalData = storeNormals ? output.NormalData : Span<Vector3>.Empty;
 
-            var f = 0;
+            var actualSize = 0;
             foreach (ref readonly var facet in input)
             {
-                WriteFacet(vertexData, normalData, in facet, f);
-                f += 3;
+                WriteFacet(vertexData, normalData, in facet, actualSize);
+                actualSize += 3;
             }
 
-            return f;
+            return actualSize;
         }
 
         [MethodImpl(AggressiveInlining)]
@@ -127,6 +150,8 @@ namespace StlVault.IO.Stl
             vertSpan[offset + 0] = c;
             vertSpan[offset + 1] = b;
             vertSpan[offset + 2] = a;
+
+            if (normSpan.IsEmpty) return;
 
             // Recompute normal vector
             var normal = Vector3.Normalize(Vector3.Cross(a - b, c - a));
