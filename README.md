@@ -1,4 +1,6 @@
 # StlVault.IO
+[![NuGet Badge](https://buildstats.info/nuget/StlVault.IO)](https://www.nuget.org/packages/StlVault.IO/)
+
 The 3d model file parsers extracted from [STL Vault](http://stlvault.com).
 
 ## Capabilities

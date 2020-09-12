@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - '*'
-      - '!master'
 
 env:
   NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
